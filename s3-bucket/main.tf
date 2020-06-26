@@ -9,19 +9,19 @@ resource "aws_s3_bucket" "bucket" {
     }
 
     logging {
-        target_bucket = "${var.s3_access_log_bucket}"
+        target_bucket = var.s3_access_log_bucket
         target_prefix = "${each.value}/"
     }
     
     tags = {
-        Project = "${var.project_name}"
-        Environment = "${var.environment}"
+        Project = var.project_name
+        Environment = var.environment
     }
 
     dynamic "cors_rule" {
-      for_each = lookup(var.cors_rules,each.value,[])
+      for_each = lookup(var.cors_rules, each.value, null) != null ? [lookup(var.cors_rules, each.value)] : []
       content {    
-				allowed_headers = cors_rule.value.allowed_headers
+		allowed_headers = cors_rule.value.allowed_headers
     		allowed_methods = cors_rule.value.allowed_methods
     		allowed_origins = cors_rule.value.allowed_origins
     		expose_headers  = cors_rule.value.expose_headers
@@ -40,7 +40,7 @@ resource "aws_s3_bucket" "bucket" {
 
 resource "aws_s3_bucket_public_access_block" "block" {
   for_each = aws_s3_bucket.bucket
-  bucket = "${each.value.id}"
+  bucket = each.value.id
 
   block_public_acls   = true
   block_public_policy = true
